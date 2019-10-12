@@ -1,0 +1,21 @@
+{
+  "name": "github.com/shadowninjazx/automl-crime",
+  "version": "0.0.0",
+  "description": "shadowninjazx/asl-translator @ Mar 14, 2019",
+  "author": null,
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "dependencies": {
+    "expo": "^30.0.1",
+    "lottie-react-native": "2.5.0",
+    "react": "16.3.1",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-34.0.2.tar.gz",
+    "react-native-gesture-handler": "^1.4.1",
+    "react-native-maps": "0.22.1",
+    "react-native-reanimated": "1.1.0",
+    "react-native-screens": "1.0.0-alpha.19",
+    "react-native-svg": "9.5.1",
+    "react-navigation": "^4.0.10",
+    "react-navigation-stack": "^1.9.4"
+  }
+}
