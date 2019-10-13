@@ -82,26 +82,26 @@ let model_output;
 
 let global_photo;
 
-global.sample = [{
-    "title":"No Recipes Yet! Check back after you take a photo",
-    "nutrition":{
-       "carbs":"",
-       "calories":"",
-       "protein":"",
-       "fat":""
-    },
-    "imageURL":"",
-    "sourceURL":"",
-}]
-
 class HomeScreen extends React.Component  {
     state = {
         text: "",
         imgUrl: "assets/icon.png",
+        sample: [{
+            "title":"No Recipes Yet! Check back after you take a photo",
+            "nutrition":{
+               "carbs":"",
+               "calories":"",
+               "protein":"",
+               "fat":""
+            },
+            "imageURL":"",
+            "sourceURL":"",
+        }]
     };
 
     async apicall(list){
         let my_big_list = []
+        let promises = []
         // ----------------------Getting Recipe By Ingredients-------------------------------
         let str1 = 'https://api.spoonacular.com/recipes/findByIngredients?ingredients=';
         // let str2 = 'apples,';
@@ -116,61 +116,81 @@ class HomeScreen extends React.Component  {
             }
         }
         let res, res2, res3 = [];
-        str1 += '&number=10&apiKey=74d571558c8c4b74895f3f8aa62a57a0';
-        fetch(str1)
-            .then(out => res = out.json())
-            .then(json => console.log(json));
-        
-    
-        // ---------------------Getting Recipe URL by Recipe ID------------------------------
-    
-        for(let i = 0; i < res.length; ++i){
-            let recipe_list = {};
-            recipe_list["id"] = res[i]["id"];
-            recipe_list["imageURL"] = res[i]["image"];
-            recipe_list["title"] = res[i]["title"];
-            my_big_list.push(recipe_list);
-        }
-    
-        let url2 = "https://api.spoonacular.com/recipes/informationBulk?ids=";
-    
-    
-        for(let i = 0; i < my_big_list.length; ++i){
-            if(i != my_big_list.length - 1){
-                url2 += my_big_list[i]["id"].toString() + ",";
-            } 
-            else{
-                url2 += my_big_list[i]["id"].toString();
+        str1 += '&number=10&apiKey=e8faf304b8f54e2088074eb4689a784e';
+
+        fetch(str1).then(response => response.json())
+        .then(data => {
+            res = data;
+        }).then(()=>{
+            for(let i = 0; i < res.length; ++i){
+                let recipe_list = {};
+                recipe_list["id"] = res[i]["id"];
+                recipe_list["imageURL"] = res[i]["image"];
+                recipe_list["title"] = res[i]["title"];
+                my_big_list.push(recipe_list);
             }
-        }        
-    
-        url2 += "&apiKey=74d571558c8c4b74895f3f8aa62a57a0"
-    
-        fetch(url2)
-            .then(out => res2 = out.json())
-            .then(json => console.log(json));
-    
-        for(let i = 0; i < my_big_list.length; ++i){
-            my_big_list[i]["sourceURL"] = res2[i]["sourceUrl"]
-        }    
-    
-        // ---------------------Getting Nutrition Data by Recipe ID-------------------------
-    
-        let url3 = "https://api.spoonacular.com/recipes/";
-        let url3_2 = "/nutritionWidget.json?apiKey=74d571558c8c4b74895f3f8aa62a57a0";
-    
-        for(let i = 0; i < my_big_list.length; ++i){
-            let url_temp = url3 + my_big_list[i]["id"].toString() + url3_2;
-            fetch(url_temp)
-                .then(out => res3 = out.json())
-                .then(json => console.log(json));
-            let new_dict = {'carbs':res3['carbs'],'calories':res3['calories'],'fat':res3['fat'],'protein':res3['protein']};
-            my_big_list[i]["nutrition"] = new_dict;
-        }
-    
-        // sample = JSON.stringify(my_big_list);
-        global.sample = JSON.stringify(my_big_list)
-        console.log(global.sample);
+
+            let url2 = "https://api.spoonacular.com/recipes/informationBulk?ids=";
+        
+            for(let i = 0; i < my_big_list.length; ++i){
+                if(i != my_big_list.length - 1){
+                    url2 += my_big_list[i]["id"].toString() + ",";
+                } 
+                else{
+                    url2 += my_big_list[i]["id"].toString();
+                }
+            }
+        
+            url2 += "&apiKey=e8faf304b8f54e2088074eb4689a784e"
+            
+            fetch(url2).then(response => response.json())
+                .then(out => {
+                    console.log("out")
+                    console.log(out)
+                    res2 = out
+                }).then(()=>{
+                    // ---------------------Getting Recipe URL by Recipe ID------------------------------
+
+                    for(let i = 0; i < my_big_list.length; ++i){
+                        my_big_list[i]["sourceURL"] = res2[i]["sourceUrl"]
+                    }    
+                
+                    // ---------------------Getting Nutrition Data by Recipe ID-------------------------
+                
+                    let url3 = "https://api.spoonacular.com/recipes/";
+                    let url3_2 = "/nutritionWidget.json?apiKey=e8faf304b8f54e2088074eb4689a784e";
+                
+                    for(let i = 0; i < my_big_list.length; ++i){
+                        let url_temp = url3 + my_big_list[i]["id"].toString() + url3_2;
+                        let promise = fetch(url_temp).then(response => response.json())
+                            .then(out => res3 = out)
+                            .then(()=>{
+                                let new_dict = {'carbs':res3['carbs'],'calories':res3['calories'],'fat':res3['fat'],'protein':res3['protein']};
+                                console.log("new dict");
+                                console.log(new_dict)
+                                my_big_list[i]["nutrition"] = new_dict;
+                            });
+                        promises.push(promise);
+                    }
+
+                    Promise.all(promises).then(()=>{
+                        console.log("my big list");
+                        console.log(my_big_list);
+            
+                        // sample = JSON.stringify(my_big_list);
+                        // this.setState({sample: JSON.stringify(my_big_list)}).then(()=>{
+                        //     console.log("this.state.sample");
+                        //     console.log(this.state.sample);
+                        // });
+
+                        // write 
+                        this.props.navigation.navigate('Details', {input: my_big_list})
+                    })
+                })
+        })
+        .catch(err => {
+            console.log(err);
+        })
     }
 
     async submitToModel(modelURL, imageURI, success) {
@@ -230,13 +250,16 @@ class HomeScreen extends React.Component  {
                 console.log('Predicted class name: '+result.displayName);
                 fruitlist.push(result.displayName);
             }
-            this.apicall(fruitlist)
+            this.apicall(fruitlist).then(()=>{
+                console.log("After APICALL");
+                console.log(this.state.sample);
+            })
         });
     }
 
     switch(){
-        console.log("global.sample")
-        console.log(global.sample)
+        console.log("switch")
+        console.log(this.state.sample)
         this.props.navigation.navigate('Details')
     }
 
@@ -266,7 +289,6 @@ class HomeScreen extends React.Component  {
                     <Button title="Take Picture of Ingredients" style={{flex: 1}} onPress={() => {
                         if (this.customCamera) this.customCamera.snap()
                     }}/>
-                    <Button title="View Recipes" onPress={() => this.switch()}/>
                 </View>
             </View>
         );
@@ -346,16 +368,21 @@ class DetailsScreen extends React.Component {
         text: [],
     };
 
+    constructor(props) {
+        super(props);
+        this.state = { text: 0 };
+      }
+    
     componentWillMount(){
         console.log("componentWillMount")
-        console.log(global.sample);
+        console.log(this.state.sample);
         this.setState({text: global.sample});
     }
 
     process() {
         // implemented with Text and Button as children
 
-        return global.sample.map(function(item, i){
+        return this.props.navigation.getParam('input', 'default value').map(function(item, i){
             // console.log(item)
             return(<Card
                 image={{uri: item.imageURL}}>
