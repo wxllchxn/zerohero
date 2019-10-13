@@ -100,7 +100,7 @@ class HomeScreen extends React.Component  {
     };
 
     async apicall(list){
-        let key = "eecb38c7da28455d970593d93a0adba2";
+        let key = "67a4c5c272d945e4b77cbff6e64d2168";
         let my_big_list = []
         let promises = []
         // ----------------------Getting Recipe By Ingredients-------------------------------
