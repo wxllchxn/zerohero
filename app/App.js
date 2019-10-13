@@ -100,6 +100,7 @@ class HomeScreen extends React.Component  {
     };
 
     async apicall(list){
+        let key = "0ed3927ac03d47348f1a300041d8a565";
         let my_big_list = []
         let promises = []
         // ----------------------Getting Recipe By Ingredients-------------------------------
@@ -116,7 +117,7 @@ class HomeScreen extends React.Component  {
             }
         }
         let res, res2, res3 = [];
-        str1 += '&number=10&apiKey=e8faf304b8f54e2088074eb4689a784e';
+        str1 += '&number=10&apiKey='+key;
 
         fetch(str1).then(response => response.json())
         .then(data => {
@@ -141,7 +142,7 @@ class HomeScreen extends React.Component  {
                 }
             }
         
-            url2 += "&apiKey=e8faf304b8f54e2088074eb4689a784e"
+            url2 += "&apiKey="+key;
             
             fetch(url2).then(response => response.json())
                 .then(out => {
@@ -158,7 +159,7 @@ class HomeScreen extends React.Component  {
                     // ---------------------Getting Nutrition Data by Recipe ID-------------------------
                 
                     let url3 = "https://api.spoonacular.com/recipes/";
-                    let url3_2 = "/nutritionWidget.json?apiKey=e8faf304b8f54e2088074eb4689a784e";
+                    let url3_2 = "/nutritionWidget.json?apiKey="+key;
                 
                     for(let i = 0; i < my_big_list.length; ++i){
                         let url_temp = url3 + my_big_list[i]["id"].toString() + url3_2;
@@ -250,10 +251,7 @@ class HomeScreen extends React.Component  {
                 console.log('Predicted class name: '+result.displayName);
                 fruitlist.push(result.displayName);
             }
-            this.apicall(fruitlist).then(()=>{
-                console.log("After APICALL");
-                console.log(this.state.sample);
-            })
+            this.apicall(fruitlist);
         });
     }
 
@@ -367,17 +365,7 @@ class DetailsScreen extends React.Component {
     state = {
         text: [],
     };
-
-    constructor(props) {
-        super(props);
-        this.state = { text: 0 };
-      }
     
-    componentWillMount(){
-        console.log("componentWillMount")
-        console.log(this.state.sample);
-        this.setState({text: global.sample});
-    }
 
     process() {
         // implemented with Text and Button as children
