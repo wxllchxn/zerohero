@@ -1,6 +1,6 @@
 # ZeroHero
 
-!["ZeroHero Icon"](icon.png "ZeroHero Icon")
+!["ZeroHero Icon"](https://github.com/wxllchxn/zerohero/blob/master/icon.png "ZeroHero Icon")
 
 ZeroHero was my team's project for MHACKS 12. As a group of sophomore who started living outside of home, we're just starting out with grocery shopping. Sometimes we buy too much, and after we're done cooking there are ingredients left from various food items that may not be related to each other at all. ZeroHero is an app which takes an image of the ingredients provided and provides links and nutritional information to recipes possible with this set of ingredients. With this, we hope to reduce food waste due to overbuying. See the [devpost](https://devpost.com/software/zerohero-reducing-food-waste-with-object-recognition) for this project!
 
