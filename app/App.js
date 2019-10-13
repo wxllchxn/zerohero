@@ -100,7 +100,7 @@ class HomeScreen extends React.Component  {
     };
 
     async apicall(list){
-        let key = "0ed3927ac03d47348f1a300041d8a565";
+        let key = "eecb38c7da28455d970593d93a0adba2";
         let my_big_list = []
         let promises = []
         // ----------------------Getting Recipe By Ingredients-------------------------------
@@ -220,8 +220,8 @@ class HomeScreen extends React.Component  {
                         }),
                     }).then(response => model_output = response.json()).then(success);
                 }, reason => {
-                        console.log("Image Base64 conversion failed");
-                        console.log(reason)
+                    console.log("Image Base64 conversion failed");
+                    console.log(reason)
                 } )
             }, reason => console.log(reason) )
         }, reason => console.log(reason))
@@ -233,15 +233,15 @@ class HomeScreen extends React.Component  {
     }
 
     async predict(uri) {
-      // this.setState({text: this.state.text + 'x'})
         let response;
+      // this.setState({text: this.state.text + 'x'})
         this.submitToModel(url, uri, res => { // submit to model
             // console.log("Model Response")
             // console.log(model_output._55[0].payload)
             response = model_output;
         }).then(()=>{
             // process model output
-            // TODO .then api call with model output
+            // .then api call with model output
             // apicall(["apple","orange","banana"])
             // store result in sample
             let payload = model_output._55[0].payload;
@@ -285,7 +285,9 @@ class HomeScreen extends React.Component  {
                     {/* <Text>{currentString}</Text> */}
                     <Image source={{uri: this.state.imgUrl}} style={{width: 300, height: 250}}/>
                     <Button title="Take Picture of Ingredients" style={{flex: 1}} onPress={() => {
-                        if (this.customCamera) this.customCamera.snap()
+                        if (this.customCamera) {
+                            this.customCamera.snap()
+                        }
                     }}/>
                 </View>
             </View>
@@ -308,7 +310,7 @@ class CustomCamera extends React.Component {
         if (this.camera) {
             let photo = await this.camera.takePictureAsync({
                 onPictureSaved: this.props.onSnap,
-                skipProcessing: true
+                // skipProcessing: true
             })
             global_photo = photo;
         }
