@@ -1,193 +1,17 @@
 import React from 'react';
-import {Button, ImageStore, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Button, ImageStore, Image, StyleSheet, Text, TouchableOpacity, View, TouchableHighlight} from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { ScrollView } from 'react-native-gesture-handler';
-
+import { Linking} from 'react-native';
 
 const url = 'https://us-central1-kaggle-160323.cloudfunctions.net/asl-translate-3';
 const twilioURL = 'https://us-central1-kaggle-160323.cloudfunctions.net/function-1';
 
-let currentString = "";
-
-class HomeScreen extends React.Component  {
-    state = {
-        text: "",
-        imgUrl: "assets/icon.png",
-    };
-
-    async submitToModel(modelURL, imageURI, success) {
-        ImageStore.getBase64ForTag(imageURI, data => {
-            fetch(modelURL, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    data: data
-                }),
-            }).then(response => response.json()).then(success);
-        }, reason => console.log(reason));
-    }
-
-    isImpossibleDuplicate(c) {
-        if (c !== this.state.text.slice(-1)) return false;
-        else return (c !== 'L' && c !== 'P') || (this.state.text.slice(-1) === this.state.text.slice(-2, -1));
-    }
-
-    async predict(uri) {
-      // this.setState({text: this.state.text + 'x'})
-        this.submitToModel(url, uri, response => {
-            if (response[0] && response[0].payload[0])
-                if (response[0].payload[0].displayName !== "Null") {
-                    let character = response[0].payload[0].displayName;
-                    if (!this.isImpossibleDuplicate(character)) {
-                        this.setState({text: this.state.text + character})
-                        currentString += character;
-                    }
-                }
-                else {
-                    if (!this.isImpossibleDuplicate(' ')) {
-                        this.setState({text: this.state.text + " "});
-                        // Expo.Speech.speak(currentString);
-                        currentString = "";
-                    }
-                }
-        })
-
-    }
-
-    render() {
-        return (
-            <View style={styles.container}>
-                <CustomCamera ref={ref => this.customCamera = ref} onSnap={img => {
-                    const manipulated = ImageManipulator.manipulateAsync(img.uri, [{
-                        resize: {
-                            width: 500,
-                            height: 400
-                        },
-
-                    }, {
-                        rotate: 0
-                    }]);
-                    manipulated.then((img) => {
-                        // console.log("Resized " + img.uri + " to size " + img.width + " by " + img.height);
-                        this.predict(img.uri);
-                        // this.setState({imgUrl: img.uri});
-                    });
-                }}/>
-                <View style={styles.bottomBox}>
-                    {/* <Text style={styles.text}>{this.state.text}</Text> */}
-                    {/* <Image source={{uri: this.state.imgUrl}} style={{width: 300, height: 250}}/> */}
-                    {/* <StartStopButton initAction={() => this.setState({text: ""})}
-                                     startAction={() => {
-                                         if (this.customCamera) this.customCamera.snap()
-                                     }}/> */}
-                    <Button title="Take Picture of Ingredients" style={{flex: 1}} onPress={() => {
-                        if (this.customCamera) this.customCamera.snap()
-                    }}/>
-                    <Button title="View Recipes" onPress={() => this.props.navigation.navigate('Details')}/>
-                </View>
-            </View>
-        );
-    }
-}
-
-// class StartStopButton extends React.Component {
-//     state = {
-//         started: false,
-//     };
-//     intervalID = 0;
-
-//     render() {
-//         return (
-//             <Button title={this.state.started ? "Stop" : "Start"}
-//                     onPress={() => {
-//                         if (this.state.started) {
-//                             clearInterval(this.intervalID);
-//                             // Expo.Speech.speak(currentString);
-//                             currentString = "";
-//                         }
-//                         if (!this.state.started) {
-//                             this.props.initAction();
-//                             this.intervalID = setInterval(this.props.startAction, 4000);
-//                         }
-//                         this.setState({started: !this.state.started})
-//                     }}/>
-//         )
-//     }
-// }
-
-class CustomCamera extends React.Component {
-    state = {
-        hasCameraPermission: null,
-        type: Camera.Constants.Type.back,
-    };
-
-    async componentWillMount() {
-        const {status} = await Permissions.askAsync(Permissions.CAMERA);
-        this.setState({hasCameraPermission: status === 'granted'});
-    }
-
-    async snap() {
-        if (this.camera) {
-            let photo = this.camera.takePictureAsync({
-                onPictureSaved: this.props.onSnap,
-                skipProcessing: true
-            });
-        }
-    }
-
-    render() {
-        const {hasCameraPermission} = this.state;
-        if (hasCameraPermission === null) {
-            return <View/>;
-        } else if (hasCameraPermission === false) {
-            return <Text>No access to camera</Text>;
-        } else {
-            return (
-                <View style={{flex: 1}}>
-                    <Camera style={styles.cameraView}
-                            type={this.state.type}
-                            ref={ref => {
-                                this.camera = ref;
-                            }}
-                            pictureSize="2560x1440">
-                        <View
-                            style={{
-                                flex: 1,
-                                backgroundColor: 'transparent',
-                                flexDirection: 'row',
-                            }}>
-                            <TouchableOpacity
-                                style={{
-                                    flex: 0.1,
-                                    alignSelf: 'flex-end',
-                                    alignItems: 'center',
-                                }}
-                                onPress={() => {
-                                    this.setState({
-                                        type: this.state.type === Camera.Constants.Type.back
-                                            ? Camera.Constants.Type.front
-                                            : Camera.Constants.Type.back,
-                                    });
-                                }}>
-                                <Text
-                                    style={{fontSize: 18, marginBottom: 10, color: 'white'}}>
-                                    {' '}Flip{' '}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </Camera>
-                </View>
-            );
-        }
-    }
-}
+let currentString = 0;
 
 let sample = [
     {
@@ -3068,6 +2892,165 @@ let sample = [
     }
 ]
 
+let model_output;
+
+let global_photo;
+
+class HomeScreen extends React.Component  {
+    state = {
+        text: "",
+        imgUrl: "assets/icon.png",
+    };
+
+    async submitToModel(modelURL, imageURI, success) {
+        ImageStore.getBase64ForTag(imageURI, data => {
+            fetch(modelURL, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: data
+                }),
+            }).then(response => response.json()).then(success);
+        }, reason => console.log(reason));
+    }
+
+    isImpossibleDuplicate(c) {
+        if (c !== this.state.text.slice(-1)) return false;
+        else return (c !== 'L' && c !== 'P') || (this.state.text.slice(-1) === this.state.text.slice(-2, -1));
+    }
+
+    async predict(uri) {
+      // this.setState({text: this.state.text + 'x'})
+        this.submitToModel(url, uri, response => {
+            if (response[0] && response[0].payload[0]) {
+                if (response[0].payload[0].displayName !== "Null") {
+                    model_output = response[0].payload[0].json() // TODO get json from model output
+                    // let character = response[0].payload[0].displayName;
+                    // if (!this.isImpossibleDuplicate(character)) {
+                    //     this.setState({text: this.state.text + character})
+                    //     currentString += character;
+                    // }
+                }
+                // else {
+                //     if (!this.isImpossibleDuplicate(' ')) {
+                //         this.setState({text: this.state.text + " "});
+                //         // Expo.Speech.speak(currentString);
+                //         currentString = "";
+                //     }
+                // }
+            }
+        }).then(() => {
+            console.log("got here: " + uri)
+        });
+        // process model output
+        // TODO .then api call with model output
+        // store result in sample
+    }
+
+    render() {
+        return (
+            <View style={styles.container}>
+                <CustomCamera ref={ref => this.customCamera = ref} onSnap={img => {
+                    const manipulated = ImageManipulator.manipulateAsync(img.uri, [{
+                        resize: {
+                            width: 500,
+                            height: 400
+                        },
+
+                    }, {
+                        rotate: 0
+                    }]);
+                    manipulated.then((img) => {
+                        this.state.imgUrl = img.uri;
+                        // console.log("Resized " + img.uri + " to size " + img.width + " by " + img.height);
+                        this.predict(img.uri);
+                        // this.setState({imgUrl: img.uri});
+                    });
+                }}/>
+                <View style={styles.bottomBox}>
+                    {/* <Text>{currentString}</Text> */}
+                    {/* <Image source={{uri: this.state.imgUrl}} style={{width: 300, height: 250}}/> */}
+                    <Button title="Take Picture of Ingredients" style={{flex: 1}} onPress={() => {
+                        if (this.customCamera) this.customCamera.snap()
+                    }}/>
+                    <Button title="View Recipes" onPress={() => this.props.navigation.navigate('Details')}/>
+                </View>
+            </View>
+        );
+    }
+}
+
+class CustomCamera extends React.Component {
+    state = {
+        hasCameraPermission: null,
+        type: Camera.Constants.Type.back,
+    };
+
+    async componentWillMount() {
+        const {status} = await Permissions.askAsync(Permissions.CAMERA);
+        this.setState({hasCameraPermission: status === 'granted'});
+    }
+
+    async snap() {
+        if (this.camera) {
+            let photo = await this.camera.takePictureAsync({
+                onPictureSaved: this.props.onSnap,
+                skipProcessing: true
+            })
+            global_photo = photo;
+        }
+    }
+
+    render() {
+        const {hasCameraPermission} = this.state;
+        if (hasCameraPermission === null) {
+            return <View/>;
+        } else if (hasCameraPermission === false) {
+            return <Text>No access to camera</Text>;
+        } else {
+            return (
+                <View style={{flex: 1}}>
+                    <Camera style={styles.cameraView}
+                            type={this.state.type}
+                            ref={ref => {
+                                this.camera = ref;
+                            }}
+                            pictureSize="2560x1440">
+                        <View
+                            style={{
+                                flex: 1,
+                                backgroundColor: 'transparent',
+                                flexDirection: 'row',
+                            }}>
+                            <TouchableOpacity
+                                style={{
+                                    flex: 0.1,
+                                    alignSelf: 'flex-end',
+                                    alignItems: 'center',
+                                }}
+                                onPress={() => {
+                                    this.setState({
+                                        type: this.state.type === Camera.Constants.Type.back
+                                            ? Camera.Constants.Type.front
+                                            : Camera.Constants.Type.back,
+                                    });
+                                }}>
+                                <Text
+                                    style={{fontSize: 18, marginBottom: 10, color: 'white'}}>
+                                    {' '}Flip{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Camera>
+                </View>
+            );
+        }
+    }
+}
+
 class DetailsScreen extends React.Component {
     state = {
         text: sample,
@@ -3075,11 +3058,13 @@ class DetailsScreen extends React.Component {
 
     process() {
         return this.state.text.map(function(item, i){
-          return(
-            <View style = {{alignItems: 'center'}} key={i}>
-                <Text style={{ alignItems: 'center', marginBottom: 10, marginTop: 10 }}>{item.title}</Text>
-                <Image source={{uri: item.image}} style={{width: 300, height: 250}} onPress={() => Linking.openURL(item.sourceUrl)}/>
-            </View>
+            return(
+                <View style = {{alignItems: 'left'}} key={i}>
+                    <Text style={{ marginBottom: 10, marginTop: 10, fontSize: 20 }} onPress={ ()=> Linking.openURL(item.sourceUrl) } >{item.title}</Text>
+                    <TouchableHighlight onPress={ ()=> Linking.openURL(item.sourceUrl) }>
+                        <Image source={{uri: item.image}} style={{width: 300, height: 250}} onPress={ ()=> Linking.openURL(item.sourceUrl) }/>
+                    </TouchableHighlight>
+                </View>
             );
         });
     }
