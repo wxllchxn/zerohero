@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, ImageStore, Image, StyleSheet, Text, TouchableOpacity, View, TouchableHighlight} from 'react-native';
+import {Button, ImageStore, ImageEditor, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -7,9 +7,10 @@ import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Linking} from 'react-native';
+import { Card, ListItem, Icon } from 'react-native-elements'
 
-const url = 'https://us-central1-kaggle-160323.cloudfunctions.net/asl-translate-3';
-const twilioURL = 'https://us-central1-kaggle-160323.cloudfunctions.net/function-1';
+const url = 'https://us-central1-kaggle-160323.cloudfunctions.net/fruits-and-veggies-1';
+// const twilioURL = 'https://us-central1-kaggle-160323.cloudfunctions.net/function-1';
 
 let currentString = 0;
 
@@ -2903,18 +2904,36 @@ class HomeScreen extends React.Component  {
     };
 
     async submitToModel(modelURL, imageURI, success) {
-        ImageStore.getBase64ForTag(imageURI, data => {
-            fetch(modelURL, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
+        Image.getSize(imageURI, (width, height) => {
+            var imageSize = {
+                size: {
+                  width,
+                  height
                 },
-                body: JSON.stringify({
-                    data: data
-                }),
-            }).then(response => response.json()).then(success);
-        }, reason => console.log(reason));
+                offset: {
+                  x: 0,
+                  y: 0,
+                },
+            };
+            ImageEditor.cropImage(imageURI, imageSize, (imageURIout) => {
+                console.log(imageURIout);
+                ImageStore.getBase64ForTag(imageURIout, data => {
+                    fetch(modelURL, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            data: data
+                        }),
+                    }).then(response => response.json()).then(success);
+                }, reason => {
+                        console.log("Image Base64 conversion failed");
+                        console.log(reason)
+                } )
+            }, (reason) => console.log(reason) )
+        }, (reason) => console.log(reason))
     }
 
     isImpossibleDuplicate(c) {
@@ -2924,16 +2943,18 @@ class HomeScreen extends React.Component  {
 
     async predict(uri) {
       // this.setState({text: this.state.text + 'x'})
-        this.submitToModel(url, uri, response => {
-            if (response[0] && response[0].payload[0]) {
-                if (response[0].payload[0].displayName !== "Null") {
-                    model_output = response[0].payload[0].json() // TODO get json from model output
+        this.submitToModel(url, uri, response => { // submit to model
+            console.log("Model Response")
+            console.log(response)
+            // if (response[0] && response[0].payload[0]) { // make sure 
+            //     if (response[0].payload[0].displayName !== "Null") {
+            //         model_output = response[0].payload[0].json() // TODO get json from model output
                     // let character = response[0].payload[0].displayName;
                     // if (!this.isImpossibleDuplicate(character)) {
                     //     this.setState({text: this.state.text + character})
                     //     currentString += character;
                     // }
-                }
+                // }
                 // else {
                 //     if (!this.isImpossibleDuplicate(' ')) {
                 //         this.setState({text: this.state.text + " "});
@@ -2941,10 +2962,9 @@ class HomeScreen extends React.Component  {
                 //         currentString = "";
                 //     }
                 // }
-            }
-        }).then(() => {
-            console.log("got here: " + uri)
+            // }
         });
+
         // process model output
         // TODO .then api call with model output
         // store result in sample
@@ -2963,16 +2983,16 @@ class HomeScreen extends React.Component  {
                     }, {
                         rotate: 0
                     }]);
-                    manipulated.then((img) => {
-                        this.state.imgUrl = img.uri;
-                        // console.log("Resized " + img.uri + " to size " + img.width + " by " + img.height);
-                        this.predict(img.uri);
-                        // this.setState({imgUrl: img.uri});
+
+                    manipulated.then((img2) => {
+                        // console.log(img);
+                        this.predict(img2.uri);
+                        this.setState({imgUrl: img2.uri});
                     });
                 }}/>
                 <View style={styles.bottomBox}>
                     {/* <Text>{currentString}</Text> */}
-                    {/* <Image source={{uri: this.state.imgUrl}} style={{width: 300, height: 250}}/> */}
+                    <Image source={{uri: this.state.imgUrl}} style={{width: 300, height: 250}}/>
                     <Button title="Take Picture of Ingredients" style={{flex: 1}} onPress={() => {
                         if (this.customCamera) this.customCamera.snap()
                     }}/>
@@ -3057,15 +3077,20 @@ class DetailsScreen extends React.Component {
     };
 
     process() {
+        // implemented with Text and Button as children
         return this.state.text.map(function(item, i){
-            return(
-                <View style = {{alignItems: 'left'}} key={i}>
-                    <Text style={{ marginBottom: 10, marginTop: 10, fontSize: 20 }} onPress={ ()=> Linking.openURL(item.sourceUrl) } >{item.title}</Text>
-                    <TouchableHighlight onPress={ ()=> Linking.openURL(item.sourceUrl) }>
-                        <Image source={{uri: item.image}} style={{width: 300, height: 250}} onPress={ ()=> Linking.openURL(item.sourceUrl) }/>
-                    </TouchableHighlight>
-                </View>
-            );
+            return(<Card
+                title={item.title}
+                image={{uri: item.image}}>
+                <Text style={{marginBottom: 10}}>
+                    Nutritional Value
+                </Text>
+                <Button
+                    icon={<Icon name='code' color='#ffffff' />}
+                    buttonStyle={{borderRadius: 0, marginLeft: 0, marginRight: 0, marginBottom: 0}}
+                    onPress={ ()=> Linking.openURL(item.sourceUrl) }
+                    title='VIEW NOW' />
+            </Card>);
         });
     }
 
