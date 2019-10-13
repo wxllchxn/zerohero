@@ -7,7 +7,7 @@ import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Linking} from 'react-native';
-import { Card, ListItem, Icon } from 'react-native-elements'
+import { Card, Icon } from 'react-native-elements'
 const fetch = require('node-fetch');
 
 const url = 'https://us-central1-kaggle-160323.cloudfunctions.net/fruits-and-veggies-1';
